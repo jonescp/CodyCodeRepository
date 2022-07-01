@@ -1,0 +1,126 @@
+//gamepanel
+
+package main;
+
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+
+import javax.swing.JPanel;
+
+// This is a subclass of JPanel with extra functions basically
+public class GamePanel extends JPanel implements Runnable{
+
+	// SCREEN SETTINGS
+	final int originalTileSize = 16; //16x16 Tile
+	final int scale = 3;
+	
+	//Creates a game screen of these size specifications:
+	final int tileSize = originalTileSize * scale; // 48x48 Tile
+	final int maxScreenCol = 16; // 16 Columns
+	final int maxScreenRow = 12; // 12 Rows
+	final int screenWidth = tileSize * maxScreenCol; // 768 Pixels
+	final int screenHeight = tileSize * maxScreenRow; // 576 Pixels
+	
+	//FPS
+	int FPS = 60;
+	
+	KeyHandler keyH = new KeyHandler();
+	// Creates "time" in your Gamepanel
+	Thread gameThread;
+	
+	//// Set players default position
+	int playerX = 100;
+	int playerY = 100;
+	int playerSpeed = 4;
+	
+	
+	// Run method automatically made by adding unimplemented methods
+	public GamePanel() {
+		
+		this.setPreferredSize(new Dimension(screenWidth, screenHeight));
+		this.setBackground(Color.black);
+		this.setDoubleBuffered(true);
+		this.addKeyListener(keyH);
+		this.setFocusable(true);
+		
+		
+	}
+
+	public void startGameThread() {
+		//passes gamepanel to thread and instantiates it
+		gameThread = new Thread(this);
+		gameThread.start();
+	}
+	// When we start game thread, it automatically calls this run method
+	// This is where game loop is created as well
+	@Override
+	public void run() {
+		
+		double drawInterval = 1000000000/FPS; // 0.01666 Seconds
+		double nextDrawTime = System.nanoTime() + drawInterval;
+		 
+		
+		
+		while(gameThread != null) {
+			
+
+			// Update 1: Update information I.E character position
+			update();
+			
+			// Draw 2: Draw the screen with updated information
+			// Repaint is how you call the paintComponent method
+			repaint();
+			
+			
+			
+			try {
+				double remainingTime = nextDrawTime - System.nanoTime();
+				remainingTime = remainingTime/1000000;
+				
+				if(remainingTime < 0) {
+					remainingTime = 0;
+				}
+				
+				Thread.sleep((long) remainingTime);
+				
+				nextDrawTime += drawInterval;
+				
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		
+	}
+	public void update() {
+		// Used to change player position
+		
+		if(keyH.upPressed == true) {
+			playerY -= playerSpeed;
+		}
+		else if (keyH.downPressed == true) {
+			playerY += playerSpeed;
+		}
+		else if (keyH.leftPressed == true) {
+			playerX -= playerSpeed;
+		}
+		else if (keyH.rightPressed == true) {
+			playerX += playerSpeed;
+		}
+	}
+	public void paintComponent(Graphics g) {
+		
+		// Used to draw things on JPanel
+		// Super means parent class of this class. Necessary to make this work
+		super.paintComponent(g);
+		
+		//Changes Graphics to Graphics2D to allow more functionality
+		Graphics2D g2 = (Graphics2D)g;
+		g2.setColor(Color.white);
+		g2.fillRect(playerX, playerY, tileSize, tileSize);
+		// Works without this line but good practice for saving system resources
+		g2.dispose();
+	}
+}
